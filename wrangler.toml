@@ -22,7 +22,24 @@ vars = { ENVIRONMENT = "staging" }
 # Production environment
 [env.production]
 name = "content-store-production"
-vars = { ENVIRONMENT = "production" }
+vars = { 
+  ENVIRONMENT = "production",
+  AUTH_SERVICE_URL = "https://auth.tamyla.com",
+  CORS_ORIGINS = "https://tamyla.com,https://www.tamyla.com,https://trading.tamyla.com",
+  MAX_FILE_SIZE = "26214400",
+  ALLOWED_FILE_TYPES = "image/jpeg,image/png,image/webp,image/gif,application/pdf,video/mp4,video/webm,audio/mpeg,audio/wav"
+}
+
+[[env.production.r2_buckets]]
+binding = "CONTENT_BUCKET"
+bucket_name = "tamyla-content-store"
+preview_bucket_name = "tamyla-content-store"
+
+[[env.production.analytics_engine_datasets]]
+binding = "CONTENT_ANALYTICS"
+
+[[env.production.routes]]
+pattern = "content.tamyla.com/*"
 
 # R2 bucket binding (using existing bucket)
 [[r2_buckets]]
