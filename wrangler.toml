@@ -52,5 +52,5 @@ compatibility_flags = ["nodejs_compat"]
 
 # Custom domain configuration
 [[routes]]
-pattern = "content.tamyla.com/*"
+pattern = "content.tamyla.com"
 custom_domain = true
