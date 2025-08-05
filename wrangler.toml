@@ -49,3 +49,8 @@ binding = "CONTENT_ANALYTICS"
 
 # Compatibility flags
 compatibility_flags = ["nodejs_compat"]
+
+# Custom domain configuration
+[[routes]]
+pattern = "content.tamyla.com/*"
+custom_domain = true
