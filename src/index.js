@@ -166,7 +166,7 @@ async function handleUpload(request, env) {
           path: filePath,
           size: file.size,
           type: file.type,
-          url: `https://content-store.tamyla.com/api/v1/content/${fileId}`
+          url: `https://content.tamyla.com/api/v1/content/${fileId}`
         }
       }),
       { 
