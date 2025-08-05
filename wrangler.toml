@@ -38,9 +38,6 @@ preview_bucket_name = "tamyla-content-store"
 [[env.production.analytics_engine_datasets]]
 binding = "CONTENT_ANALYTICS"
 
-[[env.production.routes]]
-pattern = "content.tamyla.com/*"
-
 # R2 bucket binding (using existing bucket)
 [[r2_buckets]]
 binding = "CONTENT_BUCKET"
