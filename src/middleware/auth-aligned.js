@@ -51,7 +51,7 @@ export async function authenticate(request, env) {
         return {
           success: true,
           user: {
-            id: result.sub,
+            id: result.sub || result.userId,
             email: result.email
           },
           token: token,
@@ -93,7 +93,7 @@ export async function authenticate(request, env) {
       return {
         success: true,
         user: {
-          id: result.sub,
+          id: result.sub || result.userId,
           email: result.email
         },
         token: token,
