@@ -62,11 +62,12 @@ preview_bucket_name = "tamyla-content-store"
 # Analytics binding
 [[analytics_engine_datasets]]
 binding = "CONTENT_ANALYTICS"
+dataset = "CONTENT_ANALYTICS"
 
 # Compatibility flags
 compatibility_flags = ["nodejs_compat"]
 
-# Custom domain configuration
-[[routes]]
-pattern = "content.tamyla.com"
-custom_domain = true
+# Custom domain configuration (commented out until DNS is resolved)
+# [[routes]]
+# pattern = "content.tamyla.com"
+# custom_domain = true
