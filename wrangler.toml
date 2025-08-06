@@ -5,6 +5,7 @@ compatibility_date = "2024-08-21"
 # Environment variables for all environments
 [vars]
 ENVIRONMENT = "development"
+SERVICE_NAME = "content-store-service"
 AUTH_SERVICE_URL = "https://auth.tamyla.com"
 CORS_ORIGINS = "http://localhost:3000,http://localhost:3001,https://tamyla.com,https://www.tamyla.com,https://trading.tamyla.com"
 MAX_FILE_SIZE = "26214400"  # 25MB in bytes
@@ -25,6 +26,7 @@ name = "content-store-production"
 
 [env.production.vars]
 ENVIRONMENT = "production"
+SERVICE_NAME = "content-store-service"
 AUTH_SERVICE_URL = "https://auth.tamyla.com"
 CORS_ORIGINS = "https://tamyla.com,https://www.tamyla.com,https://trading.tamyla.com"
 MAX_FILE_SIZE = "26214400"

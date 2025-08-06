@@ -1,16 +1,10 @@
 /**
  * Content Store Service - Minimal Viable Product
- * Handles file uploads with JWT authentication
- * Based on prove        { 
-          status: 401, 
-          headers: { 
-            'Content-Type': 'application/json',
-            ...corsHeaders 
-          } 
-        }rns from AWS S3, Cloudinary, etc.
+ * Handles file uploads with authentication using existing auth service
+ * Aligned with production auth service endpoints
  */
 
-import { authenticate } from './middleware/auth-simple.js';
+import { authenticate, createAuthResponse } from './middleware/auth-aligned.js';
 
 // CORS headers for browser compatibility - restrictive for security
 const getCorsHeaders = (env, request) => {
@@ -46,6 +40,17 @@ const getCorsHeaders = (env, request) => {
     'Access-Control-Max-Age': '86400'
   };
 };
+
+/**
+ * Hybrid authentication function that tries JWT first, then falls back to session auth
+ * @param {Request} request 
+ * @param {Object} env 
+ * @returns {Object} Authentication result
+ */
+async function authenticateRequest(request, env) {
+  // Simple authentication using existing auth service
+  return await authenticate(request, env);
+}
 
 export default {
   async fetch(request, env, ctx) {
@@ -112,28 +117,21 @@ export default {
 };
 
 async function handleUpload(request, env) {
-  const corsHeaders = getCorsHeaders(env, request);
-  
-  // Authenticate request
-  const authResult = await authenticate(request, env);
-  
+  // Authenticate request using existing auth service
+  const authResult = await authenticateRequest(request, env);
+
   if (!authResult.success) {
-    return new Response(
-      JSON.stringify({ 
-        success: false, 
-        error: authResult.error 
-      }),
-      { 
-        status: 401, 
-        headers: { 
-          'Content-Type': 'application/json',
-          ...corsHeaders 
-        } 
-      }
+    return createAuthResponse(
+      {
+        success: false,
+        error: authResult.error,
+        code: authResult.code
+      },
+      env,
+      request,
+      401
     );
-  }
-  
-  try {
+  }  try {
     // Get file from form data
     const formData = await request.formData();
     const file = formData.get('file');
