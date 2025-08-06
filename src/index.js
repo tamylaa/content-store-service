@@ -131,30 +131,68 @@ async function handleUpload(request, env) {
       request,
       401
     );
-  }  try {
-    // Get file from form data
-    const formData = await request.formData();
-    const file = formData.get('file');
+  }
+
+  try {
+    // Get CORS headers for responses
+    const corsHeaders = getCorsHeaders(env, request);
+
+    // Get file from form data or raw body
+    let file, originalFileName, fileContent;
     
-    if (!file) {
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: 'No file provided' 
-        }),
-        { 
-          status: 400, 
-          headers: { 
-            'Content-Type': 'application/json',
-            ...corsHeaders 
-          } 
-        }
-      );
+    const contentType = request.headers.get('Content-Type') || '';
+    
+    if (contentType.includes('multipart/form-data')) {
+      // Handle form data upload
+      const formData = await request.formData();
+      file = formData.get('file');
+      
+      if (!file) {
+        return new Response(
+          JSON.stringify({ 
+            success: false, 
+            error: 'No file provided in form data' 
+          }),
+          { 
+            status: 400, 
+            headers: { 
+              'Content-Type': 'application/json',
+              ...corsHeaders 
+            } 
+          }
+        );
+      }
+      
+      originalFileName = file.name;
+      fileContent = file.stream();
+    } else {
+      // Handle raw body upload (text/plain, etc.)
+      const body = await request.text();
+      if (!body) {
+        return new Response(
+          JSON.stringify({ 
+            success: false, 
+            error: 'No content provided' 
+          }),
+          { 
+            status: 400, 
+            headers: { 
+              'Content-Type': 'application/json',
+              ...corsHeaders 
+            } 
+          }
+        );
+      }
+      
+      // Generate filename based on content type
+      const ext = contentType.includes('text') ? 'txt' : 'bin';
+      originalFileName = `upload-${Date.now()}.${ext}`;
+      fileContent = new TextEncoder().encode(body);
     }
     
     // Generate unique filename
     const fileId = crypto.randomUUID();
-    const fileExtension = file.name.split('.').pop() || 'bin';
+    const fileExtension = originalFileName.split('.').pop() || 'bin';
     const fileName = `${fileId}.${fileExtension}`;
     const filePath = `uploads/${new Date().getFullYear()}/${new Date().getMonth() + 1}/${fileName}`;
     
@@ -162,13 +200,13 @@ async function handleUpload(request, env) {
     if (!env.CONTENT_BUCKET) {
       throw new Error('Storage not configured');
     }
-    
-    await env.CONTENT_BUCKET.put(filePath, file.stream(), {
+
+    await env.CONTENT_BUCKET.put(filePath, fileContent, {
       metadata: {
-        originalName: file.name,
+        originalName: originalFileName,
         uploadedBy: authResult.user.id,
         uploadedAt: new Date().toISOString(),
-        contentType: file.type || 'application/octet-stream'
+        contentType: contentType || 'application/octet-stream'
       }
     });
     
@@ -178,10 +216,10 @@ async function handleUpload(request, env) {
         success: true,
         file: {
           id: fileId,
-          name: file.name,
+          name: originalFileName,
           path: filePath,
-          size: file.size,
-          type: file.type,
+          size: fileContent.length || (file ? file.size : 0),
+          type: contentType,
           url: `https://content.tamyla.com/api/v1/content/${fileId}`
         }
       }),
