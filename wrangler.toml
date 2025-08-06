@@ -28,6 +28,9 @@ vars = { ENVIRONMENT = "staging" }
 # Production environment
 [env.production]
 name = "content-store-service"
+workers_dev = false
+route = "content.tamyla.com/*"
+zone_id = "tamyla.com"
 
 [env.production.vars]
 ENVIRONMENT = "production"
