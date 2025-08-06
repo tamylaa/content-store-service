@@ -22,7 +22,7 @@ vars = { ENVIRONMENT = "staging" }
 
 # Production environment
 [env.production]
-name = "content-store-production"
+name = "content-store-service"
 
 [env.production.vars]
 ENVIRONMENT = "production"
@@ -67,7 +67,7 @@ dataset = "CONTENT_ANALYTICS"
 # Compatibility flags
 compatibility_flags = ["nodejs_compat"]
 
-# Custom domain configuration (commented out until DNS is resolved)
+# Custom domain configuration (handled via DNS CNAME)
 # [[routes]]
 # pattern = "content.tamyla.com"
 # custom_domain = true
