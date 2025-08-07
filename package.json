@@ -1,6 +1,7 @@
 {
   "name": "content-store-service",
   "version": "1.0.0",
+  "type": "module",
   "description": "Content Store Service for Tamyla platform - handles file uploads with JWT authentication",
   "main": "src/index.js",
   "scripts": {

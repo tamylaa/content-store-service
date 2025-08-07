@@ -19,55 +19,8 @@ export async function authenticate(request, env) {
       return createAuthError('AUTH_REQUIRED', 'No token provided');
     }
 
-    // Use service binding if available, fallback to HTTP
-    if (env.AUTH_SERVICE) {
-      console.log('Using service binding for auth service validation');
-      
-      try {
-        const request = new Request('https://auth.tamyla.com/auth/introspect', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'User-Agent': 'Tamyla-Content-Store/1.0'
-          },
-          body: JSON.stringify({ token: token })
-        });
-
-        const response = await env.AUTH_SERVICE.fetch(request);
-
-        if (!response.ok) {
-          console.error('Auth service introspection failed via service binding:', response.status);
-          return createAuthError('AUTH_SERVICE_ERROR', 'Authentication service error');
-        }
-
-        const result = await response.json();
-        console.log('Auth service introspection successful via service binding');
-        
-        if (!result.active) {
-          return createAuthError('INVALID_TOKEN', result.error || 'Token is not active');
-        }
-
-        // Transform introspection result to our expected format
-        return {
-          success: true,
-          user: {
-            id: result.sub || result.userId,
-            email: result.email
-          },
-          token: token,
-          expiresAt: result.exp ? new Date(result.exp * 1000) : null,
-          source: 'auth-service-binding'
-        };
-
-      } catch (error) {
-        console.error('Error calling auth service via service binding:', error);
-        // Fall through to HTTP fallback
-      }
-    }
-
-    // Fallback to HTTP if no service binding or binding failed
+    // Use existing auth service introspect endpoint
     const authServiceUrl = env.AUTH_SERVICE_URL || 'https://auth.tamyla.com';
-    console.log('Fallback: Using auth service HTTP URL:', authServiceUrl);
     
     try {
       const response = await fetch(`${authServiceUrl}/auth/introspect`, {
@@ -93,12 +46,12 @@ export async function authenticate(request, env) {
       return {
         success: true,
         user: {
-          id: result.sub || result.userId,
+          id: result.sub,
           email: result.email
         },
         token: token,
         expiresAt: result.exp ? new Date(result.exp * 1000) : null,
-        source: 'auth-service-http'
+        source: 'auth-service-introspect'
       };
 
     } catch (error) {

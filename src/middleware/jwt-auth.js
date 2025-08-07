@@ -7,7 +7,7 @@
 /**
  * Main JWT authentication function
  * @param {Request} request - The incoming request
- * @param {Object} env - Environment variables (must include JWT_SECRET)
+ * @param {Object} env - Environment variables (must include AUTH_JWT_SECRET)
  * @returns {Object} Authentication result
  */
 export async function authenticateJWT(request, env) {
@@ -20,7 +20,7 @@ export async function authenticateJWT(request, env) {
     }
 
     // Validate JWT locally (no auth service call needed!)
-    const payload = await verifyJWT(token, env.JWT_SECRET);
+    const payload = await verifyJWT(token, env.AUTH_JWT_SECRET);
     
     if (!payload) {
       return createAuthError('INVALID_TOKEN', 'JWT token is invalid');
@@ -92,7 +92,7 @@ function extractToken(request) {
  */
 async function verifyJWT(token, secret) {
   if (!secret) {
-    throw new Error('JWT_SECRET not configured in environment variables');
+    throw new Error('AUTH_JWT_SECRET not configured in environment variables');
   }
 
   try {
