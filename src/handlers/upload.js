@@ -81,25 +81,60 @@ export async function handleUpload(request, env) {
       storage_path: filePath,
       is_public: false,
       category: formData.get('category') || null,
-      checksum: formData.get('checksum') || null,
+      checksum: formData.get('checksum') || `sha256-placeholder-${fileId}`, // Generate a placeholder checksum
       last_accessed_at: null,
       download_count: 0
     };
 
-    // Persist metadata to data-service
-    const dataServiceUrl = env.DATA_SERVICE_URL || 'https://data-service.tamylatrading.workers.dev/files';
+    // Persist metadata to data-service using service binding
     let persistedMetadata;
     try {
-      persistedMetadata = await apiFetch(dataServiceUrl, {
-        method: 'POST',
-        headers: {
-          Authorization: request.headers.get('Authorization') || ''
-        },
-        body: metadata
-      });
+      console.log('Attempting to persist metadata using service binding');
+      console.log('Metadata payload:', JSON.stringify(metadata));
+      
+      // Use service binding if available, fallback to HTTP
+      if (env.DATA_SERVICE) {
+        console.log('Using DATA_SERVICE binding');
+        
+        // Create a mock request for the data-service
+        const mockRequest = new Request('https://data-service/files', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': request.headers.get('Authorization') || ''
+          },
+          body: JSON.stringify(metadata)
+        });
+        
+        // Call data-service directly via service binding
+        const response = await env.DATA_SERVICE.fetch(mockRequest);
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        persistedMetadata = await response.json();
+        console.log('Metadata persistence successful via service binding:', persistedMetadata);
+      } else {
+        console.log('Service binding not available, falling back to HTTP');
+        const dataServiceUrl = env.DATA_SERVICE_URL || 'https://data-service.tamylatrading.workers.dev/files';
+        console.log('Using HTTP URL:', dataServiceUrl);
+        
+        persistedMetadata = await apiFetch(dataServiceUrl, {
+          method: 'POST',
+          headers: {
+            Authorization: request.headers.get('Authorization') || ''
+          },
+          body: metadata
+        });
+        
+        console.log('Metadata persistence successful via HTTP:', persistedMetadata);
+      }
     } catch (err) {
       // Log but do not fail upload if metadata persistence fails
       console.error('Failed to persist file metadata:', err);
+      console.error('Error details:', err.message, err.stack);
       persistedMetadata = { error: err.message };
     }
 

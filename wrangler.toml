@@ -7,6 +7,8 @@ compatibility_date = "2024-08-21"
 ENVIRONMENT = "development"
 SERVICE_NAME = "content-store-service"
 AUTH_SERVICE_URL = "https://auth.tamyla.com"
+DATA_SERVICE_URL = "https://data-service.tamylatrading.workers.dev/files"
+AUTH_JWT_SECRET = "d49f3be21dc5ebb3e95e4dfee78f524f8899313ccde1ce362c5df2d33429ad61"
 CORS_ORIGINS = "http://localhost:3000,http://localhost:3001,https://tamyla.com,https://www.tamyla.com,https://trading.tamyla.com"
 MAX_FILE_SIZE = "26214400"  # 25MB in bytes
 ALLOWED_FILE_TYPES = "image/jpeg,image/png,image/webp,image/gif,application/pdf,video/mp4,video/webm,audio/mpeg,audio/wav"
@@ -19,10 +21,17 @@ vars = { ENVIRONMENT = "development" }
 [env.staging]
 name = "content-store-staging"
 
+# Service bindings for staging
+[[env.staging.services]]
+binding = "DATA_SERVICE"
+service = "data-service"
+environment = "staging"
+
 [env.staging.vars]
 ENVIRONMENT = "staging"
 SERVICE_NAME = "content-store-service"
 AUTH_SERVICE_URL = "https://auth-staging.tamyla.com"
+DATA_SERVICE_URL = "https://data-service.tamylatrading.workers.dev/files"
 CORS_ORIGINS = "https://*.tamyla.com,http://localhost:3000,http://localhost:3001"
 MAX_FILE_SIZE = "26214400"
 ALLOWED_FILE_TYPES = "image/jpeg,image/png,image/webp,image/gif,application/pdf,video/mp4,video/webm,audio/mpeg,audio/wav"
@@ -44,11 +53,19 @@ dataset = "CONTENT_ANALYTICS"
 [env.production]
 name = "content-store-service"
 
+# Service bindings for production
+[[env.production.services]]
+binding = "DATA_SERVICE"
+service = "data-service"
+environment = "production"
+
 [env.production.vars]
 # AUTH_JWT_SECRET is set as a Cloudflare Workers secret
 ENVIRONMENT = "production"
 SERVICE_NAME = "content-store-service"
 AUTH_SERVICE_URL = "https://auth.tamyla.com"
+DATA_SERVICE_URL = "https://data-service.tamylatrading.workers.dev/files"
+AUTH_JWT_SECRET = "d49f3be21dc5ebb3e95e4dfee78f524f8899313ccde1ce362c5df2d33429ad61"
 CORS_ORIGINS = "https://tamyla.com,https://www.tamyla.com,https://trading.tamyla.com"
 MAX_FILE_SIZE = "26214400"
 ALLOWED_FILE_TYPES = "image/jpeg,image/png,image/webp,image/gif,application/pdf,video/mp4,video/webm,audio/mpeg,audio/wav"

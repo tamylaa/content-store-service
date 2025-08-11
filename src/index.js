@@ -38,6 +38,93 @@ export default {
           }
         );
       }
+
+      // Test endpoint for debugging data-service connection
+      if (url.pathname === '/test-data-service' && request.method === 'GET') {
+        try {
+          let response, data;
+          
+          if (env.DATA_SERVICE) {
+            console.log('Testing DATA_SERVICE binding');
+            
+            // Test service binding
+            const mockRequest = new Request('https://data-service/files', {
+              method: 'GET',
+              headers: {
+                'Content-Type': 'application/json'
+              }
+            });
+            
+            response = await env.DATA_SERVICE.fetch(mockRequest);
+            data = await response.text();
+            console.log('Service binding response status:', response.status);
+            console.log('Service binding response:', data);
+            
+            return new Response(
+              JSON.stringify({
+                success: true,
+                method: 'service-binding',
+                status: response.status,
+                statusText: response.statusText,
+                data: data
+              }),
+              {
+                headers: {
+                  'Content-Type': 'application/json',
+                  ...corsHeaders
+                }
+              }
+            );
+          } else {
+            console.log('No service binding, testing HTTP');
+            const dataServiceUrl = env.DATA_SERVICE_URL || 'https://data-service.tamylatrading.workers.dev/files';
+            console.log('Testing data-service URL:', dataServiceUrl);
+            
+            response = await fetch(dataServiceUrl, {
+              method: 'GET',
+              headers: {
+                'Content-Type': 'application/json'
+              }
+            });
+            
+            data = await response.text();
+            console.log('HTTP response status:', response.status);
+            console.log('HTTP response:', data);
+            
+            return new Response(
+              JSON.stringify({
+                success: true,
+                method: 'http',
+                dataServiceUrl,
+                status: response.status,
+                statusText: response.statusText,
+                data: data
+              }),
+              {
+                headers: {
+                  'Content-Type': 'application/json',
+                  ...corsHeaders
+                }
+              }
+            );
+          }
+        } catch (error) {
+          return new Response(
+            JSON.stringify({
+              success: false,
+              error: error.message,
+              stack: error.stack
+            }),
+            {
+              status: 500,
+              headers: {
+                'Content-Type': 'application/json',
+                ...corsHeaders
+              }
+            }
+          );
+        }
+      }
       
       // Upload endpoint - POST /upload
       if (url.pathname === '/upload' && request.method === 'POST') {

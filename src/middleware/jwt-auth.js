@@ -34,7 +34,7 @@ export async function authenticateJWT(request, env) {
 
     // Extract user information from token payload
     const user = payload.user || {
-      id: payload.sub || payload.userId,
+      id: payload.sub || payload.userId || payload.user_id,
       email: payload.email,
       name: payload.name
     };
