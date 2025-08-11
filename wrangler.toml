@@ -6,7 +6,7 @@ compatibility_date = "2024-08-21"
 [vars]
 ENVIRONMENT = "development"
 SERVICE_NAME = "content-store-service"
-AUTH_SERVICE_URL = "https://auth-service.tamylatrading.workers.dev"
+AUTH_SERVICE_URL = "https://auth.tamyla.com"
 CORS_ORIGINS = "http://localhost:3000,http://localhost:3001,https://tamyla.com,https://www.tamyla.com,https://trading.tamyla.com"
 MAX_FILE_SIZE = "26214400"  # 25MB in bytes
 ALLOWED_FILE_TYPES = "image/jpeg,image/png,image/webp,image/gif,application/pdf,video/mp4,video/webm,audio/mpeg,audio/wav"
@@ -18,7 +18,27 @@ vars = { ENVIRONMENT = "development" }
 # Staging environment  
 [env.staging]
 name = "content-store-staging"
-vars = { ENVIRONMENT = "staging" }
+
+[env.staging.vars]
+ENVIRONMENT = "staging"
+SERVICE_NAME = "content-store-service"
+AUTH_SERVICE_URL = "https://auth-staging.tamyla.com"
+CORS_ORIGINS = "https://*.tamyla.com,http://localhost:3000,http://localhost:3001"
+MAX_FILE_SIZE = "26214400"
+ALLOWED_FILE_TYPES = "image/jpeg,image/png,image/webp,image/gif,application/pdf,video/mp4,video/webm,audio/mpeg,audio/wav"
+
+[[env.staging.r2_buckets]]
+binding = "CONTENT_BUCKET"
+bucket_name = "tamyla-content-store-staging"
+preview_bucket_name = "tamyla-content-store-staging"
+[[env.staging.r2_buckets]]
+binding = "CONTENT_BUCKET_PROD"
+bucket_name = "tamyla-content-store"
+preview_bucket_name = "tamyla-content-store"
+
+[[env.staging.analytics_engine_datasets]]
+binding = "CONTENT_ANALYTICS"
+dataset = "CONTENT_ANALYTICS"
 
 # Production environment
 [env.production]
@@ -28,7 +48,7 @@ name = "content-store-service"
 # AUTH_JWT_SECRET is set as a Cloudflare Workers secret
 ENVIRONMENT = "production"
 SERVICE_NAME = "content-store-service"
-AUTH_SERVICE_URL = "https://auth-service.tamylatrading.workers.dev"
+AUTH_SERVICE_URL = "https://auth.tamyla.com"
 CORS_ORIGINS = "https://tamyla.com,https://www.tamyla.com,https://trading.tamyla.com"
 MAX_FILE_SIZE = "26214400"
 ALLOWED_FILE_TYPES = "image/jpeg,image/png,image/webp,image/gif,application/pdf,video/mp4,video/webm,audio/mpeg,audio/wav"
@@ -37,9 +57,14 @@ ALLOWED_FILE_TYPES = "image/jpeg,image/png,image/webp,image/gif,application/pdf,
 binding = "CONTENT_BUCKET"
 bucket_name = "tamyla-content-store"
 preview_bucket_name = "tamyla-content-store"
+[[env.production.r2_buckets]]
+binding = "CONTENT_BUCKET_STAGING"
+bucket_name = "tamyla-content-store-staging"
+preview_bucket_name = "tamyla-content-store-staging"
 
 [[env.production.analytics_engine_datasets]]
 binding = "CONTENT_ANALYTICS"
+dataset = "CONTENT_ANALYTICS"
 
 # R2 bucket binding (using existing bucket)
 [[r2_buckets]]
@@ -64,6 +89,8 @@ preview_bucket_name = "tamyla-content-store"
 [[analytics_engine_datasets]]
 binding = "CONTENT_ANALYTICS"
 dataset = "CONTENT_ANALYTICS"
+
+# Compatibility flags
 
 # Compatibility flags
 compatibility_flags = ["nodejs_compat"]
