@@ -8,6 +8,7 @@ import { createEnhancedUploadResponse } from '../helpers/file-security.js';
 import { apiFetch } from '../utils/fetch.js';
 import { addUploadToSession } from '../utils/session-cache.js';
 import { getCorsHeaders } from '../utils/cors.js';
+import { processAICategorization } from '../services/aiCategorization.js';
 
 export async function handleUpload(request, env) {
   const corsHeaders = getCorsHeaders(env, request);
@@ -70,6 +71,10 @@ export async function handleUpload(request, env) {
       }
     });
     
+    // Simple categorization - always use 'general' for user uploads
+    // Future: This will be enhanced by the content-analyzer service
+    const category = formData.get('category') || 'general';
+
     // Prepare metadata for data-service
     const metadata = {
       id: fileId,
@@ -80,7 +85,7 @@ export async function handleUpload(request, env) {
       owner_id: authResult.user.id,
       storage_path: filePath,
       is_public: false,
-      category: formData.get('category') || null,
+      category: category,
       checksum: formData.get('checksum') || `sha256-placeholder-${fileId}`, // Generate a placeholder checksum
       last_accessed_at: null,
       download_count: 0
@@ -96,21 +101,32 @@ export async function handleUpload(request, env) {
       if (env.DATA_SERVICE) {
         console.log('Using DATA_SERVICE binding');
         
+        // Debug: Log the original request headers
+        console.log('Original request headers:', Object.fromEntries(request.headers.entries()));
+        
+        const authHeader = request.headers.get('Authorization');
+        console.log('Auth header from original request:', authHeader ? `${authHeader.substring(0, 30)}...` : 'NOT FOUND');
+        
         // Create a mock request for the data-service
         const mockRequest = new Request('https://data-service/files', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': request.headers.get('Authorization') || ''
+            'Authorization': authHeader || ''
           },
           body: JSON.stringify(metadata)
         });
+        
+        // Debug: Log the mock request headers
+        console.log('Mock request headers:', Object.fromEntries(mockRequest.headers.entries()));
         
         // Call data-service directly via service binding
         const response = await env.DATA_SERVICE.fetch(mockRequest);
         
         if (!response.ok) {
+          console.log('Service binding response failed:', response.status, response.statusText);
           const errorData = await response.json();
+          console.log('Service binding error data:', errorData);
           throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
         }
         
@@ -151,6 +167,17 @@ export async function handleUpload(request, env) {
       storage_path: filePath,
       ...persistedMetadata
     });
+
+    // Optional: Log file for future content-analyzer service processing
+    if (persistedMetadata && persistedMetadata.success) {
+      // Lightweight background logging - no blocking operations
+      console.log(`📁 File ready for future AI analysis: ${fileId} (${file.name})`);
+      
+      // Future: Queue file for content-analyzer service
+      // processAICategorization(env, fileId, file, metadata)
+      //   .then(result => console.log(`🤖 AI categorization: ${result.success ? 'success' : 'failed'}`))
+      //   .catch(error => console.log(`🤖 AI categorization error: ${error.message}`));
+    }
 
     return new Response(
       JSON.stringify({
