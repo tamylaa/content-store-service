@@ -88,7 +88,8 @@ export async function handleUpload(request, env) {
       category: category,
       checksum: formData.get('checksum') || `sha256-placeholder-${fileId}`, // Generate a placeholder checksum
       last_accessed_at: null,
-      download_count: 0
+      download_count: 0,
+      status: 'pending-analysis' // New field for analysis state
     };
 
     // Persist metadata to data-service using service binding
@@ -172,11 +173,29 @@ export async function handleUpload(request, env) {
     if (persistedMetadata && persistedMetadata.success) {
       // Lightweight background logging - no blocking operations
       console.log(`📁 File ready for future AI analysis: ${fileId} (${file.name})`);
-      
-      // Future: Queue file for content-analyzer service
-      // processAICategorization(env, fileId, file, metadata)
-      //   .then(result => console.log(`🤖 AI categorization: ${result.success ? 'success' : 'failed'}`))
-      //   .catch(error => console.log(`🤖 AI categorization error: ${error.message}`));
+
+      // Emit event to content-skimmer (webhook or queue)
+      try {
+        const { generateSignedUrl } = await import('../helpers/file-security.js');
+        const signedUrl = generateSignedUrl(fileId, authResult.user.id, env, 60);
+        const eventPayload = {
+          fileId,
+          userId: authResult.user.id,
+          signedUrl: `${env.CONTENT_SERVICE_URL || 'https://content-store-service.tamylatrading.workers.dev'}${signedUrl}`
+        };
+        // POST to content-skimmer (assume env.CONTENT_SKIMMER_URL is set)
+        if (env.CONTENT_SKIMMER_URL) {
+          fetch(env.CONTENT_SKIMMER_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(eventPayload)
+          }).then(r => console.log('Content-skimmer event sent:', r.status)).catch(e => console.error('Skimmer event error:', e));
+        } else {
+          console.warn('CONTENT_SKIMMER_URL not set, skipping event emission');
+        }
+      } catch (e) {
+        console.error('Failed to emit event to content-skimmer:', e);
+      }
     }
 
     return new Response(

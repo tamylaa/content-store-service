@@ -146,9 +146,33 @@ export default {
         return await handleFileAccess(fileId, request, env);
       }
       
+
       // List user's files endpoint - GET /files
       if (url.pathname === '/files' && request.method === 'GET') {
         return await handleListFiles(request, env);
+      }
+
+      // API to generate signed/proxy URLs for file access (for content-ai-analysis)
+      // POST /generate-signed-url { fileId }
+      if (url.pathname === '/generate-signed-url' && request.method === 'POST') {
+        const { generateSignedUrl } = await import('./helpers/file-security.js');
+        const authResult = await (await import('./middleware/jwt-auth.js')).authenticateJWT(request, env);
+        if (!authResult.success) {
+          return new Response(JSON.stringify({ success: false, error: authResult.error }), { status: 401, headers: corsHeaders });
+        }
+        const body = await request.json();
+        const fileId = body.fileId;
+        if (!fileId) {
+          return new Response(JSON.stringify({ success: false, error: 'Missing fileId' }), { status: 400, headers: corsHeaders });
+        }
+        // Only allow owner to generate signed URL
+        const { checkFileOwnership } = await import('./helpers/file-security.js');
+        const ownership = await checkFileOwnership(fileId, authResult.user.id, env);
+        if (!ownership.exists || !ownership.owned) {
+          return new Response(JSON.stringify({ success: false, error: 'Not authorized for this file' }), { status: 403, headers: corsHeaders });
+        }
+        const signedUrl = generateSignedUrl(fileId, authResult.user.id, env, 60);
+        return new Response(JSON.stringify({ success: true, signedUrl: `${env.CONTENT_SERVICE_URL || 'https://content-store-service.tamylatrading.workers.dev'}${signedUrl}` }), { headers: corsHeaders });
       }
       
       // NEW: Toggle file public status - PUT /access/{fileId}/public
