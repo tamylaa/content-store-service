@@ -2,20 +2,26 @@ name = "content-store-service"
 main = "src/index.js"
 compatibility_date = "2024-08-21"
 
-# Environment variables for all environments
+# Environment variables for all environments - ALIGNED WITH SHARED CONFIG
 [vars]
-ENVIRONMENT = "development"
+NODE_ENV = "development"
 SERVICE_NAME = "content-store-service"
-AUTH_SERVICE_URL = "https://auth.tamyla.com"
-DATA_SERVICE_URL = "https://data-service.tamylatrading.workers.dev/files"
+LOG_LEVEL = "info"
+AUTH_SERVICE_URL = "http://localhost:3003"
+DATA_SERVICE_URL = "http://localhost:3002"
+CONTENT_STORE_SERVICE_URL = "http://localhost:3001"
 AUTH_JWT_SECRET = "d49f3be21dc5ebb3e95e4dfee78f524f8899313ccde1ce362c5df2d33429ad61"
-CORS_ORIGINS = "http://localhost:3000,http://localhost:3001,https://tamyla.com,https://www.tamyla.com,https://trading.tamyla.com"
+CORS_ORIGINS = "http://localhost:3000,http://localhost:3001,http://localhost:3002"
 MAX_FILE_SIZE = "26214400"  # 25MB in bytes
 ALLOWED_FILE_TYPES = "image/jpeg,image/png,image/webp,image/gif,application/pdf,video/mp4,video/webm,audio/mpeg,audio/wav"
 
 # Development environment
 [env.development]
-vars = { ENVIRONMENT = "development" }
+vars = { 
+  NODE_ENV = "development",
+  SERVICE_NAME = "content-store-service",
+  LOG_LEVEL = "info"
+}
 
 # Staging environment  
 [env.staging]
@@ -28,10 +34,12 @@ service = "data-service"
 environment = "staging"
 
 [env.staging.vars]
-ENVIRONMENT = "staging"
+NODE_ENV = "staging"
 SERVICE_NAME = "content-store-service"
+LOG_LEVEL = "info"
 AUTH_SERVICE_URL = "https://auth-staging.tamyla.com"
-DATA_SERVICE_URL = "https://data-service.tamylatrading.workers.dev/files"
+DATA_SERVICE_URL = "https://data-service-staging.tamylatrading.workers.dev"
+CONTENT_STORE_SERVICE_URL = "https://content-staging.tamyla.com"
 CORS_ORIGINS = "https://*.tamyla.com,http://localhost:3000,http://localhost:3001"
 MAX_FILE_SIZE = "26214400"
 ALLOWED_FILE_TYPES = "image/jpeg,image/png,image/webp,image/gif,application/pdf,video/mp4,video/webm,audio/mpeg,audio/wav"
@@ -60,12 +68,12 @@ service = "data-service"
 environment = "production"
 
 [env.production.vars]
-# AUTH_JWT_SECRET is set as a Cloudflare Workers secret
-ENVIRONMENT = "production"
+NODE_ENV = "production"
 SERVICE_NAME = "content-store-service"
+LOG_LEVEL = "info"
 AUTH_SERVICE_URL = "https://auth.tamyla.com"
-DATA_SERVICE_URL = "https://data-service.tamylatrading.workers.dev/files"
-AUTH_JWT_SECRET = "d49f3be21dc5ebb3e95e4dfee78f524f8899313ccde1ce362c5df2d33429ad61"
+DATA_SERVICE_URL = "https://data-service.tamylatrading.workers.dev"
+CONTENT_STORE_SERVICE_URL = "https://content.tamyla.com"
 CORS_ORIGINS = "https://tamyla.com,https://www.tamyla.com,https://trading.tamyla.com"
 MAX_FILE_SIZE = "26214400"
 ALLOWED_FILE_TYPES = "image/jpeg,image/png,image/webp,image/gif,application/pdf,video/mp4,video/webm,audio/mpeg,audio/wav"

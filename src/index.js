@@ -6,7 +6,7 @@
 
 import { handleUpload } from './handlers/upload.js';
 import { handleFileAccess } from './handlers/access.js';
-import { handleListFiles } from './handlers/files.js';
+import { handleListFiles, handleSessionFiles, handleFileStats } from './handlers/files.js';
 import { handleTogglePublic, handleListPublicFiles } from './handlers/public.js';
 import { getCorsHeaders } from './utils/cors.js';
 
@@ -147,9 +147,23 @@ export default {
       }
       
 
-      // List user's files endpoint - GET /files
+      // List user's files endpoint - GET /files (enhanced with pagination)
       if (url.pathname === '/files' && request.method === 'GET') {
         return await handleListFiles(request, env);
+      }
+
+      // NEW ENHANCED ENDPOINTS:
+      
+      // Get user's recent session uploads - GET /files/session
+      // Returns instant feedback for recent uploads
+      if (url.pathname === '/files/session' && request.method === 'GET') {
+        return await handleSessionFiles(request, env);
+      }
+      
+      // Get file statistics and summary - GET /files/stats
+      // Returns user file statistics and activity summary
+      if (url.pathname === '/files/stats' && request.method === 'GET') {
+        return await handleFileStats(request, env);
       }
 
       // API to generate signed/proxy URLs for file access (for content-ai-analysis)
